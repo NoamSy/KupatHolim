@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MaccabiHealth – Your Digital Health Fund</title>
+  <meta name="description" content="Book doctor appointments, manage your health, and access 50+ specialists with MaccabiHealth — Israel's premier digital health fund."/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo-icon">🏥</div>
+      <h1>MaccabiHealth</h1>
+      <p>Your Digital Health Fund Portal</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Sign In</button>
+      <button class="auth-tab" data-tab="register">Register</button>
+    </div>
+
+    <!-- Login -->
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-email">Email Address</label>
+        <input id="login-email" class="form-control" type="email" placeholder="you@example.com" required/>
+      </div>
+      <div class="form-group">
+        <label for="login-pass">Password</label>
+        <input id="login-pass" class="form-control" type="password" placeholder="••••••••" required/>
+      </div>
+      <div id="login-error" class="error-msg"></div>
+      <button type="submit" class="btn btn-primary" style="margin-top:8px">Sign In →</button>
+    </form>
+
+    <!-- Register -->
+    <form id="register-form" class="hidden">
+      <div class="form-group">
+        <label for="reg-name">Full Name</label>
+        <input id="reg-name" class="form-control" type="text" placeholder="Yossi Cohen" required/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label for="reg-id">ID Number</label>
+          <input id="reg-id" class="form-control" type="text" placeholder="123456789" maxlength="9"/>
+        </div>
+        <div class="form-group">
+          <label for="reg-dob">Date of Birth</label>
+          <input id="reg-dob" class="form-control" type="date"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="reg-email">Email Address</label>
+        <input id="reg-email" class="form-control" type="email" placeholder="you@example.com" required/>
+      </div>
+      <div class="form-group">
+        <label for="reg-phone">Phone Number</label>
+        <input id="reg-phone" class="form-control" type="tel" placeholder="05X-XXXXXXX"/>
+      </div>
+      <div class="form-group">
+        <label for="reg-hmo">HMO Plan</label>
+        <select id="reg-hmo" class="form-control">
+          <option value="">Select plan...</option>
+          <option value="Maccabi Gold">Maccabi Gold</option>
+          <option value="Maccabi Silver">Maccabi Silver</option>
+          <option value="Maccabi Basic">Maccabi Basic</option>
+          <option value="Maccabi Premium">Maccabi Premium</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="reg-pass">Password</label>
+        <input id="reg-pass" class="form-control" type="password" placeholder="Min. 6 characters" minlength="6"/>
+      </div>
+      <div id="reg-error" class="error-msg"></div>
+      <button type="submit" class="btn btn-primary" style="margin-top:8px">Create Account →</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     APP SCREEN
+══════════════════════════════════ -->
+<div id="app-screen" class="hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">🏥</div>
+      <div class="logo-text">
+        <h2>MaccabiHealth</h2>
+        <span>Digital Health Fund</span>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar-letter">U</div>
+      <div class="user-info">
+        <h4 id="user-name">User</h4>
+        <span id="user-id">ID: —</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" data-page="doctors">
+        <span class="nav-icon">👨‍⚕️</span> Find Doctors
+      </div>
+      <div class="nav-item" data-page="appointments">
+        <span class="nav-icon">📅</span> My Appointments
+      </div>
+      <div class="nav-section-label">Account</div>
+      <div class="nav-item" data-page="profile">
+        <span class="nav-icon">👤</span> My Profile
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="btn-logout" class="btn btn-secondary" style="width:100%">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="page-dashboard" class="page">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>Welcome back to your health portal</p>
+      </div>
+      <div class="page-content">
+        <div class="hero-banner">
+          <h2>Your Health, Our Priority 💙</h2>
+          <p>Access 50+ specialist doctors across 19 medical specialties — all in one place.</p>
+          <button class="btn btn-primary" style="width:auto" onclick="navigate('doctors')">📋 Book an Appointment</button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon teal">📅</div>
+            <div class="stat-value" id="stat-upcoming">0</div>
+            <div class="stat-label">Upcoming Appointments</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">👨‍⚕️</div>
+            <div class="stat-value" id="stat-doctors">50</div>
+            <div class="stat-label">Available Doctors</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon gold">🏥</div>
+            <div class="stat-value" id="stat-specialties">19</div>
+            <div class="stat-label">Medical Specialties</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red">📋</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Appointments</div>
+          </div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Next Appointment</h3>
+              <button class="btn btn-secondary btn-sm" onclick="navigate('appointments')">View All</button>
+            </div>
+            <div id="next-appointment"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3>Recent Activity</h3>
+            </div>
+            <div id="recent-activity"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DOCTORS ── -->
+    <div id="page-doctors" class="page hidden">
+      <div class="page-header">
+        <h1>Find a Doctor</h1>
+        <p>Browse 50+ specialists across 19 medical fields</p>
+      </div>
+      <div class="page-content">
+        <div class="search-bar">
+          <input id="doctor-search" class="form-control" type="text" placeholder="🔍  Search by name, specialty, clinic or language…"/>
+        </div>
+        <div id="specialty-filters" class="specialty-filters"></div>
+        <div id="doctors-grid" class="doctors-grid"></div>
+      </div>
+    </div>
+
+    <!-- ── APPOINTMENTS ── -->
+    <div id="page-appointments" class="page hidden">
+      <div class="page-header">
+        <h1>My Appointments</h1>
+        <p>Manage your upcoming and past visits</p>
+      </div>
+      <div class="page-content">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <h3>Upcoming</h3>
+            <button class="btn btn-primary btn-sm" onclick="navigate('doctors')">+ Book New</button>
+          </div>
+          <div id="appts-upcoming" class="appointments-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Past &amp; Cancelled</h3></div>
+          <div id="appts-past" class="appointments-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFILE ── -->
+    <div id="page-profile" class="page hidden">
+      <div class="page-header">
+        <h1>My Profile</h1>
+        <p>Your health fund membership details</p>
+      </div>
+      <div class="page-content">
+        <div class="profile-hero">
+          <div class="profile-avatar" id="profile-avatar-letter">U</div>
+          <div class="profile-details">
+            <h2 id="profile-name">—</h2>
+            <p id="profile-hmo" style="color:var(--teal);font-weight:600"></p>
+            <p>Member since <span id="profile-since">—</span></p>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:16px">
+            <div style="text-align:center;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.2);padding:14px 20px;border-radius:12px">
+              <div style="font-size:24px;font-weight:800;color:var(--teal)" id="profile-stat-upcoming">0</div>
+              <div style="font-size:12px;color:var(--text-secondary)">Upcoming</div>
+            </div>
+            <div style="text-align:center;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);padding:14px 20px;border-radius:12px">
+              <div style="font-size:24px;font-weight:800;color:var(--blue)" id="profile-stat-total">0</div>
+              <div style="font-size:12px;color:var(--text-secondary)">Total Visits</div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-grid">
+          <div class="info-card"><h4>Full Name</h4><p id="profile-name2" style="font-size:18px" id="profile-name">—</p></div>
+          <div class="info-card"><h4>Email</h4><p id="profile-email">—</p></div>
+          <div class="info-card"><h4>ID Number</h4><p id="profile-id">—</p></div>
+          <div class="info-card"><h4>Phone</h4><p id="profile-phone">—</p></div>
+          <div class="info-card"><h4>Date of Birth</h4><p id="profile-dob">—</p></div>
+          <div class="info-card"><h4>HMO Plan</h4><p id="profile-plan" style="color:var(--teal)"><span id="profile-hmo2"></span></p></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════
+     BOOKING MODAL
+══════════════════════════════════ -->
+<div id="booking-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      <div style="font-size:52px" id="modal-doctor-emoji">👨‍⚕️</div>
+      <div>
+        <h2 id="modal-doctor-name" style="margin-bottom:0"></h2>
+        <div class="doctor-specialty" id="modal-doctor-specialty" style="margin-top:6px"></div>
+        <div style="color:var(--text-secondary);font-size:13px;margin-top:4px">📍 <span id="modal-doctor-clinic"></span></div>
+      </div>
+    </div>
+    <p id="modal-doctor-bio" style="color:var(--text-secondary);font-size:14px;margin-bottom:20px;line-height:1.6"></p>
+    <div class="divider"></div>
+    <div class="form-group">
+      <label>Select Date</label>
+      <input id="booking-date" class="form-control" type="date"/>
+    </div>
+    <div class="form-group">
+      <label>Available Time Slots</label>
+      <div id="time-slots" class="time-slots"></div>
+    </div>
+    <div class="form-group">
+      <label>Notes for Doctor <span style="color:var(--text-muted)">(optional)</span></label>
+      <input id="booking-notes" class="form-control" type="text" placeholder="Brief reason for visit…"/>
+    </div>
+    <button id="confirm-booking" class="btn btn-primary" style="margin-top:8px">✅ Confirm Appointment</button>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
