@@ -7,5 +7,50 @@
     "status": "upcoming",
     "bookedAt": "2026-05-14T22:18:25.594919",
     "notes": ""
+  },
+  {
+    "id": 1778793896772,
+    "userId": 1778787896808,
+    "doctorId": 1,
+    "dateTime": "2026-05-14T10:30:00",
+    "status": "cancelled",
+    "bookedAt": "2026-05-15T00:24:56.772945",
+    "notes": ""
+  },
+  {
+    "id": 1778793901288,
+    "userId": 1778787896808,
+    "doctorId": 1,
+    "dateTime": "2026-05-14T08:30:00",
+    "status": "cancelled",
+    "bookedAt": "2026-05-15T00:25:01.288276",
+    "notes": ""
+  },
+  {
+    "id": 1778794047190,
+    "userId": 123,
+    "doctorId": 1,
+    "dateTime": "2026-05-15T10:00:00",
+    "status": "upcoming",
+    "bookedAt": "2026-05-15T00:27:27.190779",
+    "notes": ""
+  },
+  {
+    "id": 1778794137640,
+    "userId": 1778787896808,
+    "doctorId": 2,
+    "dateTime": "2026-05-17T09:00:00",
+    "status": "cancelled",
+    "bookedAt": "2026-05-15T00:28:57.640069",
+    "notes": ""
+  },
+  {
+    "id": 1778794232932,
+    "userId": 1778792282840,
+    "doctorId": 1,
+    "dateTime": "2026-06-01T08:00:00",
+    "status": "upcoming",
+    "bookedAt": "2026-05-15T00:30:32.933006",
+    "notes": ""
   }
 ]

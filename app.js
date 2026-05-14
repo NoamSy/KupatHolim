@@ -7,8 +7,7 @@ const store = {
 // ── Data stores (all localStorage-based for GitHub Pages) ──
 function getUsers()        { return store.get('mhf_users')        || []; }
 function saveUsers(u)      { store.set('mhf_users', u); }
-function getAppointments() { return store.get('mhf_appointments') || []; }
-function saveAppointments(a){ store.set('mhf_appointments', a); }
+async function getAppointments() { try { const res = await fetch('/api/appointments'); return await res.json(); } catch(e) { return []; } }
 
 // ── Session ────────────────────────────────────────────────
 function getSession()    { return store.get('mhf_session'); }
@@ -80,7 +79,7 @@ document.querySelectorAll('.auth-tab').forEach(tab => {
 });
 
 // ── Login ──────────────────────────────────────────────────────
-document.getElementById('login-form').addEventListener('submit', e => {
+document.getElementById('login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email  = document.getElementById('login-email').value.trim().toLowerCase();
   const pass   = document.getElementById('login-pass').value;
@@ -88,22 +87,35 @@ document.getElementById('login-form').addEventListener('submit', e => {
   const btn    = e.target.querySelector('button[type=submit]');
   btn.disabled = true; btn.textContent = 'Signing in...';
 
-  const users = getUsers();
-  const user  = users.find(u => u.email.toLowerCase() === email && u.password === pass);
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
 
-  btn.disabled = false; btn.textContent = 'Sign In →';
+    if (!res.ok) {
+      btn.disabled = false; btn.textContent = 'Sign In →';
+      errEl.textContent = 'Invalid email or password.';
+      errEl.classList.add('show');
+      return;
+    }
 
-  if (!user) {
-    errEl.textContent = 'Invalid email or password.'; errEl.classList.add('show'); return;
+    const user = await res.json();
+    btn.disabled = false; btn.textContent = 'Sign In →';
+    errEl.classList.remove('show');
+    saveSession(user);
+    showApp(user);
+    toast(`Welcome back, ${user.fullName}! 👋`);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Sign In →';
+    errEl.textContent = 'Network error. Please try again later.';
+    errEl.classList.add('show');
   }
-  errEl.classList.remove('show');
-  saveSession(user);
-  showApp(user);
-  toast(`Welcome back, ${user.fullName}! 👋`);
 });
 
 // ── Register ───────────────────────────────────────────────────
-document.getElementById('register-form').addEventListener('submit', e => {
+document.getElementById('register-form').addEventListener('submit', async e => {
   e.preventDefault();
   const fullName = document.getElementById('reg-name').value.trim();
   const email    = document.getElementById('reg-email').value.trim().toLowerCase();
@@ -124,31 +136,36 @@ document.getElementById('register-form').addEventListener('submit', e => {
 
   btn.disabled = true; btn.textContent = 'Creating account...';
 
-  const users = getUsers();
-  if (users.find(u => u.email.toLowerCase() === email)) {
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullName, email, idNumber, dob, hmo, phone, password: pass })
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      btn.disabled = false; btn.textContent = 'Create Account →';
+      if (data.error === 'EMAIL_EXISTS') {
+        errEl.textContent = 'This email is already registered.';
+      } else {
+        errEl.textContent = data.error || 'Registration failed.';
+      }
+      errEl.classList.add('show');
+      return;
+    }
+
+    const user = await res.json();
     btn.disabled = false; btn.textContent = 'Create Account →';
-    errEl.textContent = 'This email is already registered.'; errEl.classList.add('show'); return;
+    errEl.classList.remove('show');
+    saveSession(user);
+    showApp(user);
+    toast(`Welcome to MaccabiHealth, ${fullName}! 🎉`);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Create Account →';
+    errEl.textContent = 'Network error. Please try again later.';
+    errEl.classList.add('show');
   }
-
-  const user = {
-    id:       Date.now(),
-    fullName,
-    email,
-    idNumber,
-    dob,
-    hmo,
-    phone,
-    password: pass,
-    joinDate: new Date().toISOString(),
-  };
-  users.push(user);
-  saveUsers(users);
-
-  btn.disabled = false; btn.textContent = 'Create Account →';
-  errEl.classList.remove('show');
-  saveSession(user);
-  showApp(user);
-  toast(`Welcome to MaccabiHealth, ${fullName}! 🎉`);
 });
 
 // ── Logout ─────────────────────────────────────────────────────
@@ -159,9 +176,9 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 });
 
 // ─── Dashboard ────────────────────────────────────────────────
-function renderDashboard() {
+async function renderDashboard() {
   const user     = getSession();
-  const all      = getAppointments();
+  const all      = await getAppointments();
   const appts    = all.filter(a => a.userId === user.id);
   const now      = new Date();
   const upcoming = appts.filter(a => new Date(a.dateTime) > now && a.status !== 'cancelled');
@@ -204,13 +221,19 @@ function renderDashboard() {
     recentEl.innerHTML = recent.map(a => {
       const doc = DOCTORS.find(d => d.id === a.doctorId);
       const d   = new Date(a.dateTime);
+      const isPast = d <= now && a.status !== 'cancelled';
+      const displayStatus = isPast ? 'past' : a.status;
       return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
         <span style="font-size:24px">${doc?.emoji}</span>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:600">${doc?.name}</div>
-          <div style="font-size:12px;color:var(--text-secondary)">${d.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          <div style="font-size:12px;color:var(--text-secondary)">
+            📅 ${d.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })} &nbsp;•&nbsp; 
+            ⏰ ${d.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })} &nbsp;•&nbsp; 
+            📍 ${doc?.clinic}
+          </div>
         </div>
-        <span class="appt-status ${a.status}">${a.status}</span>
+        <span class="appt-status ${displayStatus}">${isPast ? 'Past' : a.status}</span>
       </div>`;
     }).join('');
   }
@@ -313,12 +336,12 @@ let selectedDoctor = null;
 let selectedSlot   = null;
 let selectedDate   = null;
 
-function loadSlots(date) {
+async function loadSlots(date) {
   selectedSlot = null;
   selectedDate = date;
   const grid = document.getElementById('time-slots');
 
-  const all   = getAppointments();
+  const all   = await getAppointments();
   const taken = all
     .filter(a => a.doctorId === selectedDoctor?.id && a.dateTime.startsWith(date) && a.status !== 'cancelled')
     .map(a => a.dateTime.split('T')[1].substring(0, 5));
@@ -328,7 +351,7 @@ function loadSlots(date) {
   ).join('');
 }
 
-function openBooking(docId) {
+async function openBooking(docId) {
   selectedDoctor = DOCTORS.find(d => d.id === docId);
   selectedSlot   = null;
   selectedDate   = null;
@@ -358,48 +381,48 @@ function selectSlot(slot, el) {
   selectedSlot = slot;
 }
 
-document.getElementById('confirm-booking').addEventListener('click', () => {
+document.getElementById('confirm-booking').addEventListener('click', async () => {
   if (!selectedDate || !selectedSlot) { toast('Please select a date and time slot.', 'error'); return; }
   const user = getSession();
   const btn  = document.getElementById('confirm-booking');
   btn.disabled = true;
   btn.textContent = 'Booking…';
 
-  const appts = getAppointments();
   const dateTime = `${selectedDate}T${selectedSlot}:00`;
+  const notes = document.getElementById('booking-notes').value.trim();
 
-  // Check for conflict
-  const conflict = appts.some(a =>
-    a.doctorId === selectedDoctor.id &&
-    a.dateTime === dateTime &&
-    a.status   !== 'cancelled'
-  );
+  try {
+    const res = await fetch('/api/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doctorId: selectedDoctor.id, dateTime, userId: user.id, notes })
+    });
 
-  btn.disabled    = false;
-  btn.textContent = '✅ Confirm Appointment';
+    btn.disabled = false;
+    btn.textContent = '✅ Confirm Appointment';
 
-  if (conflict) {
-    toast('❌ This slot was just taken. Please pick a different time.', 'error');
-    loadSlots(selectedDate); // refresh slot view
-    return;
+    if (!res.ok) {
+      const data = await res.json();
+      if (data.error === 'SLOT_TAKEN') {
+        toast('❌ This slot was just taken. Please pick a different time.', 'error');
+        loadSlots(selectedDate);
+      } else {
+        toast('❌ Booking failed.', 'error');
+      }
+      return;
+    }
+
+    const docName = selectedDoctor.name;
+    closeBooking();
+    toast(`Appointment booked with ${docName}! ✅`);
+    if (currentPage === 'dashboard')    renderDashboard();
+    if (currentPage === 'appointments') renderAppointments();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ Confirm Appointment';
+    console.error(e);
+    toast('❌ Network error.', 'error');
   }
-
-  const newAppt = {
-    id:       Date.now(),
-    userId:   user.id,
-    doctorId: selectedDoctor.id,
-    dateTime,
-    status:   'upcoming',
-    bookedAt: new Date().toISOString(),
-    notes:    document.getElementById('booking-notes').value.trim(),
-  };
-  appts.push(newAppt);
-  saveAppointments(appts);
-
-  closeBooking();
-  toast(`Appointment booked with ${selectedDoctor.name}! ✅`);
-  if (currentPage === 'dashboard')    renderDashboard();
-  if (currentPage === 'appointments') renderAppointments();
 });
 
 function closeBooking() {
@@ -414,9 +437,9 @@ document.getElementById('booking-modal').addEventListener('click', e => {
 });
 
 // ─── Appointments Page ────────────────────────────────────────
-function renderAppointments() {
+async function renderAppointments() {
   const user     = getSession();
-  const all      = getAppointments();
+  const all      = await getAppointments();
   const appts    = all.filter(a => a.userId === user.id);
   const now      = new Date();
   const upcoming = appts.filter(a => new Date(a.dateTime) > now && a.status !== 'cancelled').sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
@@ -449,18 +472,19 @@ function renderApptList(appts, isPast) {
   }).join('');
 }
 
-function cancelAppt(id) {
-  const appts = getAppointments();
-  const appt  = appts.find(a => a.id === id);
-  if (appt) appt.status = 'cancelled';
-  saveAppointments(appts);
-  renderAppointments();
-  if (currentPage === 'dashboard') renderDashboard();
-  toast('Appointment cancelled.', 'info');
+async function cancelAppt(id) {
+  try {
+    await fetch(`/api/appointments/${id}`, { method: 'PATCH' });
+    renderAppointments();
+    if (currentPage === 'dashboard') renderDashboard();
+    toast('Appointment cancelled.', 'info');
+  } catch(e) {
+    toast('Failed to cancel appointment.', 'error');
+  }
 }
 
 // ─── Profile Page ──────────────────────────────────────────────
-function renderProfile() {
+async function renderProfile() {
   const user  = getSession();
   document.getElementById('profile-avatar-letter').textContent = user.fullName.charAt(0).toUpperCase();
   document.getElementById('profile-name').textContent          = user.fullName;
@@ -471,7 +495,7 @@ function renderProfile() {
   document.getElementById('profile-dob').textContent           = user.dob ? new Date(user.dob).toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
   document.getElementById('profile-since').textContent         = new Date(user.joinDate).toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const all   = getAppointments();
+  const all   = await getAppointments();
   const appts = all.filter(a => a.userId === user.id);
   const now   = new Date();
   document.getElementById('profile-stat-upcoming').textContent = appts.filter(a => new Date(a.dateTime) > now && a.status !== 'cancelled').length;
